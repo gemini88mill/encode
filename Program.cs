@@ -63,14 +63,24 @@ rootCommand.SetAction(parseResult =>
         return 2;
     }
 
+    if (string.IsNullOrWhiteSpace(algorithm) || string.IsNullOrWhiteSpace(input))
+    {
+        Console.Error.WriteLine("Algorithm and input are required.");
+        return 2;
+    }
+
     EncoderBase? encoder = algorithm.ToUpperInvariant() switch
     {
+        "MD5" => new Md5Encoder(),
         "SHA-1" => new Sha1Encoder(),
         "SHA1" => new Sha1Encoder(),
         "SHA-256" => new Sha256Encoder(),
         "SHA256" => new Sha256Encoder(),
+        "SHA-384" => new Sha384Encoder(),
+        "SHA384" => new Sha384Encoder(),
         "SHA-512" => new Sha512Encoder(),
         "SHA512" => new Sha512Encoder(),
+        "URL" => new UrlEncoder(),
         _ => null
     };
 
