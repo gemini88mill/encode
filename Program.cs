@@ -28,8 +28,8 @@ var upperOption = new Option<bool>("--upper")
 };
 var formatOption = new Option<OutputFormat>("--format")
 {
-    Description = "Output format: hex or base64.",
-    DefaultValueFactory = _ => OutputFormat.Hex
+    Description = "Output format: base64 or hex.",
+    DefaultValueFactory = _ => OutputFormat.Base64
 };
 
 var rootCommand = new RootCommand("Encode text or files and write the result to stdout or a file.");
@@ -54,6 +54,12 @@ rootCommand.SetAction(parseResult =>
     if (lower && upper)
     {
         Console.Error.WriteLine("Choose only one of --lower or --upper.");
+        return 2;
+    }
+
+    if ((lower || upper) && format != OutputFormat.Hex)
+    {
+        Console.Error.WriteLine("--lower/--upper only apply to hex output.");
         return 2;
     }
 
@@ -90,9 +96,17 @@ rootCommand.SetAction(parseResult =>
         return 2;
     }
 
+    if (encoder is UrlEncoder && format != OutputFormat.Base64)
+    {
+        Console.Error.WriteLine("--format is not supported for URL encoding.");
+        return 2;
+    }
+
+    var upperCaseHex = upper;
+
     var output = outFile is null
-        ? encoder.EncodeToString(input, file)
-        : encoder.EncodeToFile(input, file, outFile.FullName);
+        ? encoder.EncodeToString(input, file, format, upperCaseHex)
+        : encoder.EncodeToFile(input, file, outFile.FullName, format, upperCaseHex);
 
     if (outFile is null)
     {
@@ -103,9 +117,3 @@ rootCommand.SetAction(parseResult =>
 });
 
 return rootCommand.Parse(args).Invoke();
-
-enum OutputFormat
-{
-    Hex,
-    Base64
-}
