@@ -367,3 +367,6 @@ FodyWeavers.xsd
 AGENTS.md
 docs/
 
+## Sample data
+testdata/
+

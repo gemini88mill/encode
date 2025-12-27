@@ -1,4 +1,5 @@
 using System.CommandLine;
+using Encode;
 
 var algorithmArgument = new Argument<string>("algorithm")
 {
@@ -62,7 +63,32 @@ rootCommand.SetAction(parseResult =>
         return 2;
     }
 
-    // TODO: Implement encoding pipeline and write output to stdout or file.
+    EncoderBase? encoder = algorithm.ToUpperInvariant() switch
+    {
+        "SHA-1" => new Sha1Encoder(),
+        "SHA1" => new Sha1Encoder(),
+        "SHA-256" => new Sha256Encoder(),
+        "SHA256" => new Sha256Encoder(),
+        "SHA-512" => new Sha512Encoder(),
+        "SHA512" => new Sha512Encoder(),
+        _ => null
+    };
+
+    if (encoder is null)
+    {
+        Console.Error.WriteLine($"Unsupported algorithm: {algorithm}");
+        return 2;
+    }
+
+    var output = outFile is null
+        ? encoder.EncodeToString(input, file)
+        : encoder.EncodeToFile(input, file, outFile.FullName);
+
+    if (outFile is null)
+    {
+        Console.WriteLine(output);
+    }
+
     return 0;
 });
 
