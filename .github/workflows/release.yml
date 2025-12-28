@@ -71,6 +71,12 @@ jobs:
           name: enc-win-x64.${{ steps.version.outputs.version }}
           path: publish/enc-win-x64.zip
 
+      - name: Upload raw Windows executable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: enc-win-x64-exe.${{ steps.version.outputs.version }}
+          path: publish/win-x64/enc.exe
+
       - name: Attach package to release
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
@@ -78,3 +84,4 @@ jobs:
           files: |
             bin/Release/*.nupkg
             publish/enc-win-x64.zip
+            publish/win-x64/enc.exe
