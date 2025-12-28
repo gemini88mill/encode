@@ -1,0 +1,37 @@
+name: Package CLI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build-pack:
+    name: Build and pack CLI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Pack tool
+        run: dotnet pack -c Release
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: enc-dotnet-tool
+          path: bin/Release/*.nupkg
+
+      - name: Attach package to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: bin/Release/*.nupkg

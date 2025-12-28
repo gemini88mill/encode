@@ -59,6 +59,19 @@ dotnet run -- hash SHA-256 "hello world" --out output.txt
 dotnet run -- encode base64 "hello world" --out output.txt
 ```
 
+## Install as a .NET tool (download from GitHub)
+Packaged releases are published as `.nupkg` files so you can install the CLI without building from source.
+
+1. Download the latest `encode-cli.0.0.1.nupkg` artifact from the GitHub release assets or the workflow run artifacts.
+2. Install the tool from the folder containing the downloaded package:
+   ```bash
+   dotnet tool install --global encode-cli --version 0.0.1 --add-source .
+   ```
+3. Verify the install:
+   ```bash
+   enc --help
+   ```
+
 ## Local development
 
 ### Prerequisites
