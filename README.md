@@ -1,12 +1,14 @@
 # Encode CLI
 
-Command-line utility for hashing or encoding text and files. The tool supports hashing to Base64 or hexadecimal (upper- or lowercase) and encoding/decoding using Base64 or URL encoding.
+Command-line utility for hashing, encoding, and encrypting text and files. The tool supports hashing to Base64 or hexadecimal (upper- or lowercase), encoding/decoding using Base64 or URL encoding, and AES-256-GCM encryption.
 
 ## Usage
 
 ```bash
 dotnet run -- hash <algorithm> <input> [options]
 dotnet run -- encode <algorithm> <input> [options]
+dotnet run -- encrypt <algorithm> <input> [options]
+dotnet run -- generateKey [options]
 ```
 
 `<input>` can be raw text or a file path when `--file` is supplied.
@@ -52,11 +54,54 @@ dotnet run -- encode base64 "aGVsbG8gd29ybGQ=" --decode
 dotnet run -- encode url "hello world"
 ```
 
+### Encrypt command
+
+Supported algorithms: `AES-256-GCM` (common dash-less variants are also accepted).
+
+Options:
+- `--file, -f` Treat the input as a file path and use the file contents.
+- `--out <path>, -o <path>` Write output to the given file instead of stdout.
+- `--decrypt, -d` Decrypt instead of encrypt.
+- `--key <value>, -k <value>` Encryption key bytes (required).
+- `--key-format <base64|hex>` Key format (defaults to `base64`).
+- `--nonce <value>, -n <value>` Nonce/IV for AES-GCM (optional, uses `--key-format`).
+- `--aad <value>` Associated data (AAD) as UTF-8 text (optional).
+- `--format <base64|hex>` Output payload format (defaults to `base64`).
+- `--upper` Uppercase hex output (only valid with `--format hex`).
+- `--lower` Lowercase hex output (only valid with `--format hex`, default when using hex).
+
+Examples:
+```bash
+# Encrypt text to base64 payload
+dotnet run -- encrypt AES-256-GCM "hello world" --key <base64-key>
+
+# Decrypt a hex payload
+dotnet run -- encrypt AES-256-GCM "<payload>" --decrypt --key <hex-key> --key-format hex --format hex
+```
+
+### Generate key command
+
+Options:
+- `--bytes <count>, -b <count>` Number of bytes to generate (defaults to 32).
+- `--format <base64|hex>` Output format (defaults to `base64`).
+- `--upper` Uppercase hex output (only valid with `--format hex`).
+- `--lower` Lowercase hex output (only valid with `--format hex`, default when using hex).
+
+Examples:
+```bash
+# Generate a 32-byte base64 key (default)
+dotnet run -- generateKey
+
+# Generate a 32-byte hex key
+dotnet run -- generateKey --format hex --upper
+```
+
 ### Output to a file
-Use `--out` with either command to write the result to disk instead of stdout.
+Use `--out` with hash, encode, or encrypt to write the result to disk instead of stdout.
 ```bash
 dotnet run -- hash SHA-256 "hello world" --out output.txt
 dotnet run -- encode base64 "hello world" --out output.txt
+dotnet run -- encrypt AES-256-GCM "hello world" --key <base64-key> --out output.txt
 ```
 
 ## Install as a .NET tool (download from GitHub)
