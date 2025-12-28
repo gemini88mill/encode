@@ -1,10 +1,8 @@
 namespace Encode;
 
-public sealed class UrlEncoder : EncoderBase
+public sealed class UrlEncoder : EncodingBase
 {
-    public override string EncodeToString(string input, bool isFile, OutputFormat format, bool upperCaseHex)
-    {
-        var text = isFile ? File.ReadAllText(input) : input;
-        return Uri.EscapeDataString(text);
-    }
+    protected override string Encode(string input) => Uri.EscapeDataString(input);
+
+    protected override string Decode(string input) => Uri.UnescapeDataString(input);
 }

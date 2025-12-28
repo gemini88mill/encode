@@ -1,55 +1,53 @@
 using System.CommandLine;
 using Encode;
 
-var algorithmArgument = new Argument<string>("algorithm")
+var hashCommand = new Command("hash", "Hash text or files and write the result to stdout or a file.");
+var hashAlgorithmArgument = new Argument<string>("algorithm")
 {
-    Description = "Encoding or hashing algorithm (e.g., SHA-256)."
+    Description = "Hash algorithm (e.g., SHA-256)."
 };
-var inputArgument = new Argument<string>("input")
+var hashInputArgument = new Argument<string>("input")
 {
     Description = "Text input, or a file path when --file is provided."
 };
-
-var fileOption = new Option<bool>("--file", "-f")
+var hashFileOption = new Option<bool>("--file", "-f")
 {
-    Description = "Treat input as a file path and encode the file contents."
+    Description = "Treat input as a file path and use the file contents."
 };
-var outOption = new Option<FileInfo?>("--out", "-o")
+var hashOutOption = new Option<FileInfo?>("--out", "-o")
 {
     Description = "Write output to a file instead of stdout."
 };
-var lowerOption = new Option<bool>("--lower")
+var hashLowerOption = new Option<bool>("--lower")
 {
     Description = "Output lowercase hex when applicable (default)."
 };
-var upperOption = new Option<bool>("--upper")
+var hashUpperOption = new Option<bool>("--upper")
 {
     Description = "Output uppercase hex when applicable."
 };
-var formatOption = new Option<OutputFormat>("--format")
+var hashFormatOption = new Option<OutputFormat>("--format")
 {
     Description = "Output format: base64 or hex.",
     DefaultValueFactory = _ => OutputFormat.Base64
 };
+hashCommand.Arguments.Add(hashAlgorithmArgument);
+hashCommand.Arguments.Add(hashInputArgument);
+hashCommand.Options.Add(hashFileOption);
+hashCommand.Options.Add(hashOutOption);
+hashCommand.Options.Add(hashLowerOption);
+hashCommand.Options.Add(hashUpperOption);
+hashCommand.Options.Add(hashFormatOption);
 
-var rootCommand = new RootCommand("Encode text or files and write the result to stdout or a file.");
-rootCommand.Arguments.Add(algorithmArgument);
-rootCommand.Arguments.Add(inputArgument);
-rootCommand.Options.Add(fileOption);
-rootCommand.Options.Add(outOption);
-rootCommand.Options.Add(lowerOption);
-rootCommand.Options.Add(upperOption);
-rootCommand.Options.Add(formatOption);
-
-rootCommand.SetAction(parseResult =>
+hashCommand.SetAction(parseResult =>
 {
-    var algorithm = parseResult.GetValue(algorithmArgument);
-    var input = parseResult.GetValue(inputArgument);
-    var file = parseResult.GetValue(fileOption);
-    var outFile = parseResult.GetValue(outOption);
-    var lower = parseResult.GetValue(lowerOption);
-    var upper = parseResult.GetValue(upperOption);
-    var format = parseResult.GetValue(formatOption);
+    var algorithm = parseResult.GetValue(hashAlgorithmArgument);
+    var input = parseResult.GetValue(hashInputArgument);
+    var file = parseResult.GetValue(hashFileOption);
+    var outFile = parseResult.GetValue(hashOutOption);
+    var lower = parseResult.GetValue(hashLowerOption);
+    var upper = parseResult.GetValue(hashUpperOption);
+    var format = parseResult.GetValue(hashFormatOption);
 
     if (lower && upper)
     {
@@ -63,19 +61,19 @@ rootCommand.SetAction(parseResult =>
         return 2;
     }
 
-    if (file && !File.Exists(input))
-    {
-        Console.Error.WriteLine($"Input file not found: {input}");
-        return 2;
-    }
-
     if (string.IsNullOrWhiteSpace(algorithm) || string.IsNullOrWhiteSpace(input))
     {
         Console.Error.WriteLine("Algorithm and input are required.");
         return 2;
     }
 
-    EncoderBase? encoder = algorithm.ToUpperInvariant() switch
+    if (file && !File.Exists(input))
+    {
+        Console.Error.WriteLine($"Input file not found: {input}");
+        return 2;
+    }
+
+    HashEncoderBase? encoder = algorithm.ToUpperInvariant() switch
     {
         "MD5" => new Md5Encoder(),
         "SHA-1" => new Sha1Encoder(),
@@ -86,27 +84,20 @@ rootCommand.SetAction(parseResult =>
         "SHA384" => new Sha384Encoder(),
         "SHA-512" => new Sha512Encoder(),
         "SHA512" => new Sha512Encoder(),
-        "URL" => new UrlEncoder(),
         _ => null
     };
 
     if (encoder is null)
     {
-        Console.Error.WriteLine($"Unsupported algorithm: {algorithm}");
-        return 2;
-    }
-
-    if (encoder is UrlEncoder && format != OutputFormat.Base64)
-    {
-        Console.Error.WriteLine("--format is not supported for URL encoding.");
+        Console.Error.WriteLine($"Unsupported hash algorithm: {algorithm}");
         return 2;
     }
 
     var upperCaseHex = upper;
 
     var output = outFile is null
-        ? encoder.EncodeToString(input, file, format, upperCaseHex)
-        : encoder.EncodeToFile(input, file, outFile.FullName, format, upperCaseHex);
+        ? encoder.HashToString(input, file, format, upperCaseHex)
+        : encoder.HashToFile(input, file, outFile.FullName, format, upperCaseHex);
 
     if (outFile is null)
     {
@@ -115,5 +106,92 @@ rootCommand.SetAction(parseResult =>
 
     return 0;
 });
+
+var encodeFileOption = new Option<bool>("--file", "-f")
+{
+    Description = "Treat input as a file path and use the file contents."
+};
+var encodeOutOption = new Option<FileInfo?>("--out", "-o")
+{
+    Description = "Write output to a file instead of stdout."
+};
+var decodeOption = new Option<bool>("--decode", "-d")
+{
+    Description = "Decode instead of encode."
+};
+
+var encodeCommand = new Command("encode", "Encode or decode text or files and write the result to stdout or a file.");
+var encodeAlgorithmArgument = new Argument<string>("algorithm")
+{
+    Description = "Encoding algorithm (e.g., base64 or url)."
+};
+var encodeInputArgument = new Argument<string>("input")
+{
+    Description = "Text input, or a file path when --file is provided."
+};
+encodeCommand.Arguments.Add(encodeAlgorithmArgument);
+encodeCommand.Arguments.Add(encodeInputArgument);
+encodeCommand.Options.Add(encodeFileOption);
+encodeCommand.Options.Add(encodeOutOption);
+encodeCommand.Options.Add(decodeOption);
+
+encodeCommand.SetAction(parseResult =>
+{
+    var algorithm = parseResult.GetValue(encodeAlgorithmArgument);
+    var input = parseResult.GetValue(encodeInputArgument);
+    var file = parseResult.GetValue(encodeFileOption);
+    var outFile = parseResult.GetValue(encodeOutOption);
+    var decode = parseResult.GetValue(decodeOption);
+
+    if (string.IsNullOrWhiteSpace(algorithm) || string.IsNullOrWhiteSpace(input))
+    {
+        Console.Error.WriteLine("Algorithm and input are required.");
+        return 2;
+    }
+
+    if (file && !File.Exists(input))
+    {
+        Console.Error.WriteLine($"Input file not found: {input}");
+        return 2;
+    }
+
+    EncodingBase? encoder = algorithm.ToUpperInvariant() switch
+    {
+        "BASE64" => new Base64Encoder(),
+        "BASE-64" => new Base64Encoder(),
+        "URL" => new UrlEncoder(),
+        _ => null
+    };
+
+    if (encoder is null)
+    {
+        Console.Error.WriteLine($"Unsupported encoding algorithm: {algorithm}");
+        return 2;
+    }
+
+    string output;
+    try
+    {
+        output = outFile is null
+            ? encoder.TransformToString(input, file, decode)
+            : encoder.TransformToFile(input, file, outFile.FullName, decode);
+    }
+    catch (FormatException ex)
+    {
+        Console.Error.WriteLine(ex.Message);
+        return 2;
+    }
+
+    if (outFile is null)
+    {
+        Console.WriteLine(output);
+    }
+
+    return 0;
+});
+
+var rootCommand = new RootCommand("Hash or encode text or files and write the result to stdout or a file.");
+rootCommand.Subcommands.Add(hashCommand);
+rootCommand.Subcommands.Add(encodeCommand);
 
 return rootCommand.Parse(args).Invoke();
