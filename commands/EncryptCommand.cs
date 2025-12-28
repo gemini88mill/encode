@@ -124,12 +124,12 @@ internal static class EncryptCommand
                 return 2;
             }
 
-            EncryptionBase? encoder = algorithm.ToUpperInvariant() switch
+            EncrypterBase? encoder = algorithm.ToUpperInvariant() switch
             {
-                "AES-256-GCM" => new Aes256GcmEncoder(),
-                "AES256GCM" => new Aes256GcmEncoder(),
-                "AES256-GCM" => new Aes256GcmEncoder(),
-                "AES-GCM" => new Aes256GcmEncoder(),
+                "AES-256-GCM" => new Aes256GcmEncrypter(),
+                "AES256GCM" => new Aes256GcmEncrypter(),
+                "AES256-GCM" => new Aes256GcmEncrypter(),
+                "AES-GCM" => new Aes256GcmEncrypter(),
                 _ => null
             };
 

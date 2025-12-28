@@ -1,6 +1,6 @@
 namespace Encode;
 
-public sealed class UrlEncoder : EncodingBase
+public sealed class UrlEncoder : EncoderBase
 {
     protected override string Encode(string input) => Uri.EscapeDataString(input);
 

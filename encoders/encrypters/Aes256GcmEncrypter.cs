@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 
 namespace Encode;
 
-public sealed class Aes256GcmEncoder : EncryptionBase
+public sealed class Aes256GcmEncrypter : EncrypterBase
 {
     private const int KeySize = 32;
 

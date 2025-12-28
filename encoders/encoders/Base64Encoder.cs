@@ -2,7 +2,7 @@ using System.Text;
 
 namespace Encode;
 
-public sealed class Base64Encoder : EncodingBase
+public sealed class Base64Encoder : EncoderBase
 {
     protected override string Encode(string input)
     {

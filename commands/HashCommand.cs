@@ -84,17 +84,17 @@ internal static class HashCommand
                 return 2;
             }
 
-            HashEncoderBase? encoder = algorithm.ToUpperInvariant() switch
+            HasherBase? encoder = algorithm.ToUpperInvariant() switch
             {
-                "MD5" => new Md5Encoder(),
-                "SHA-1" => new Sha1Encoder(),
-                "SHA1" => new Sha1Encoder(),
-                "SHA-256" => new Sha256Encoder(),
-                "SHA256" => new Sha256Encoder(),
-                "SHA-384" => new Sha384Encoder(),
-                "SHA384" => new Sha384Encoder(),
-                "SHA-512" => new Sha512Encoder(),
-                "SHA512" => new Sha512Encoder(),
+                "MD5" => new Md5Hasher(),
+                "SHA-1" => new Sha1Hasher(),
+                "SHA1" => new Sha1Hasher(),
+                "SHA-256" => new Sha256Hasher(),
+                "SHA256" => new Sha256Hasher(),
+                "SHA-384" => new Sha384Hasher(),
+                "SHA384" => new Sha384Hasher(),
+                "SHA-512" => new Sha512Hasher(),
+                "SHA512" => new Sha512Hasher(),
                 _ => null
             };
 

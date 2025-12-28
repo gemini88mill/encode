@@ -4,7 +4,7 @@ namespace Encode;
 
 public sealed record EncryptionPayload(byte[] Nonce, byte[] Tag, byte[] Ciphertext);
 
-public abstract class EncryptionBase
+public abstract class EncrypterBase
 {
     protected virtual int NonceSize => 12;
     protected virtual int TagSize => 16;
