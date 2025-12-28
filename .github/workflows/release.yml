@@ -21,13 +21,40 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
+      - name: Determine package version
+        id: version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          if [ -n "$RELEASE_TAG" ]; then
+            VERSION="${RELEASE_TAG#v}"
+          else
+            VERSION=$(python - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          csproj = Path("encode.csproj")
+          tree = ET.parse(csproj)
+          root = tree.getroot()
+          version_node = next((n for n in root.findall("PropertyGroup/Version") if n.text), None)
+          if version_node is None:
+              raise SystemExit("No <Version> value found in encode.csproj")
+
+          print(version_node.text.strip())
+          PY
+            )
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Using package version: $VERSION"
+
       - name: Pack tool
-        run: dotnet pack -c Release
+        run: dotnet pack -c Release /p:Version=${{ steps.version.outputs.version }}
 
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
         with:
-          name: enc-dotnet-tool
+          name: enc-dotnet-tool.${{ steps.version.outputs.version }}
           path: bin/Release/*.nupkg
 
       - name: Attach package to release
