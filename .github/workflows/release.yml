@@ -4,6 +4,13 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Optional package version to use (defaults to release tag or project version)"
+        required: false
+      tag:
+        description: "Optional release tag to attach assets to"
+        required: false
 
 jobs:
   build-pack:
@@ -25,8 +32,14 @@ jobs:
         id: version
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
+          DISPATCH_TAG: ${{ github.event.inputs.tag }}
+          DISPATCH_VERSION: ${{ github.event.inputs.version }}
         run: |
-          if [ -n "$RELEASE_TAG" ]; then
+          if [ -n "$DISPATCH_VERSION" ]; then
+            VERSION="$DISPATCH_VERSION"
+          elif [ -n "$DISPATCH_TAG" ]; then
+            VERSION="${DISPATCH_TAG#v}"
+          elif [ -n "$RELEASE_TAG" ]; then
             VERSION="${RELEASE_TAG#v}"
           else
             VERSION=$(python - <<'PY'
@@ -78,9 +91,10 @@ jobs:
           path: publish/win-x64/enc.exe
 
       - name: Attach package to release
-        if: github.event_name == 'release'
+        if: github.event_name == 'release' || github.event.inputs.tag != ''
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag }}
           files: |
             bin/Release/*.nupkg
             publish/enc-win-x64.zip
