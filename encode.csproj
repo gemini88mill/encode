@@ -6,10 +6,21 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>enc</AssemblyName>
+    <PackAsTool>true</PackAsTool>
+    <PackageId>encode-cli</PackageId>
+    <ToolCommandName>enc</ToolCommandName>
+    <Version>0.0.1</Version>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Authors>Encode CLI</Authors>
+    <Description>Command-line utility for hashing or encoding text and files.</Description>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.CommandLine" Version="2.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" />
   </ItemGroup>
 
 </Project>

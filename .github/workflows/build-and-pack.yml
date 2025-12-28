@@ -1,0 +1,56 @@
+name: Build and package
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Calculate package version
+        run: |
+          VERSION=$(python - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          csproj = Path("encode.csproj")
+          tree = ET.parse(csproj)
+          root = tree.getroot()
+          version_node = next((n for n in root.findall("PropertyGroup/Version") if n.text), None)
+          if version_node is None:
+              raise SystemExit("No <Version> value found in encode.csproj")
+
+          parts = version_node.text.strip().split(".")
+          while len(parts) < 3:
+              parts.append("0")
+
+          major, minor, patch = parts[:3]
+          print(f"{major}.{minor}.{int(patch) + 1}")
+          PY
+          echo "PACKAGE_VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "Calculated version: $VERSION"
+
+      - name: Build
+        run: dotnet build -c Release
+
+      - name: Pack
+        run: dotnet pack -c Release -o artifacts /p:Version=${{ env.PACKAGE_VERSION }}
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: encode-cli.${{ env.PACKAGE_VERSION }}
+          path: artifacts/*.nupkg
