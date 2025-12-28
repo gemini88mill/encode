@@ -40,6 +40,7 @@ jobs:
           major, minor, patch = parts[:3]
           print(f"{major}.{minor}.{int(patch) + 1}")
           PY
+          )
           echo "PACKAGE_VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "Calculated version: $VERSION"
 
