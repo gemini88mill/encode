@@ -12,6 +12,9 @@ on:
         description: "Optional release tag to attach assets to"
         required: false
 
+permissions:
+  contents: write
+
 jobs:
   build-pack:
     name: Build and pack CLI
