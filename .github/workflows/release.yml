@@ -57,8 +57,24 @@ jobs:
           name: enc-dotnet-tool.${{ steps.version.outputs.version }}
           path: bin/Release/*.nupkg
 
+      - name: Publish Windows executable
+        run: dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:Version=${{ steps.version.outputs.version }} -o publish/win-x64
+
+      - name: Archive Windows executable
+        run: |
+          cd publish/win-x64
+          zip ../enc-win-x64.zip enc.exe
+
+      - name: Upload Windows executable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: enc-win-x64.${{ steps.version.outputs.version }}
+          path: publish/enc-win-x64.zip
+
       - name: Attach package to release
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
-          files: bin/Release/*.nupkg
+          files: |
+            bin/Release/*.nupkg
+            publish/enc-win-x64.zip
