@@ -2,7 +2,7 @@ using System.Text;
 
 namespace Encode;
 
-public abstract class HashEncoderBase
+public abstract class HasherBase
 {
     public string HashToString(string input, bool isFile, OutputFormat format, bool upperCaseHex)
     {

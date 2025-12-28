@@ -60,7 +60,7 @@ internal static class EncodeCommand
                 return 2;
             }
 
-            EncodingBase? encoder = algorithm.ToUpperInvariant() switch
+            EncoderBase? encoder = algorithm.ToUpperInvariant() switch
             {
                 "BASE64" => new Base64Encoder(),
                 "BASE-64" => new Base64Encoder(),

@@ -1,6 +1,6 @@
 namespace Encode;
 
-public abstract class EncodingBase
+public abstract class EncoderBase
 {
     public string TransformToString(string input, bool isFile, bool decode)
     {
