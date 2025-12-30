@@ -37,7 +37,11 @@ internal static class EncryptCommand
         var encryptKeyOption = new Option<string>("--key", "-k")
         {
             Description = "Encryption key bytes (format determined by --key-format).",
-            Required = true
+            Required = false
+        };
+        var encryptPasswordOption = new Option<string?>("--password", "-p")
+        {
+            Description = "Password to derive a key from (UTF-8 text)."
         };
         var encryptKeyFormatOption = new Option<OutputFormat>("--key-format")
         {
@@ -72,6 +76,7 @@ internal static class EncryptCommand
         encryptCommand.Options.Add(encryptOutOption);
         encryptCommand.Options.Add(encryptDecryptOption);
         encryptCommand.Options.Add(encryptKeyOption);
+        encryptCommand.Options.Add(encryptPasswordOption);
         encryptCommand.Options.Add(encryptKeyFormatOption);
         encryptCommand.Options.Add(encryptNonceOption);
         encryptCommand.Options.Add(encryptAadOption);
@@ -87,6 +92,7 @@ internal static class EncryptCommand
             var outFile = parseResult.GetValue(encryptOutOption);
             var decrypt = parseResult.GetValue(encryptDecryptOption);
             var keyText = parseResult.GetValue(encryptKeyOption);
+            var passwordText = parseResult.GetValue(encryptPasswordOption);
             var keyFormat = parseResult.GetValue(encryptKeyFormatOption);
             var nonceText = parseResult.GetValue(encryptNonceOption);
             var aadText = parseResult.GetValue(encryptAadOption);
@@ -112,9 +118,18 @@ internal static class EncryptCommand
                 return 2;
             }
 
-            if (string.IsNullOrWhiteSpace(keyText))
+            var hasPassword = !string.IsNullOrWhiteSpace(passwordText);
+            var hasKey = !string.IsNullOrWhiteSpace(keyText);
+
+            if (hasPassword && hasKey)
             {
-                Console.Error.WriteLine("Key is required.");
+                Console.Error.WriteLine("Provide either --password or --key, not both.");
+                return 2;
+            }
+
+            if (!hasPassword && !hasKey)
+            {
+                Console.Error.WriteLine("Key is required when --password is not provided.");
                 return 2;
             }
 
@@ -139,7 +154,12 @@ internal static class EncryptCommand
                 return 2;
             }
 
-            if (!CliHelpers.TryParseBytes(keyText, keyFormat, out var keyBytes))
+            byte[] keyBytes;
+            if (hasPassword)
+            {
+                keyBytes = CliHelpers.DeriveKeyFromPassword(passwordText!);
+            }
+            else if (!CliHelpers.TryParseBytes(keyText!, keyFormat, out keyBytes))
             {
                 Console.Error.WriteLine($"Invalid key for {keyFormat.ToString().ToLowerInvariant()} format.");
                 return 2;
