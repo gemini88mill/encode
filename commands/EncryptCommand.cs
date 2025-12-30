@@ -13,7 +13,7 @@ internal static class EncryptCommand
     {
         var encryptCommand = new Command(
             "encrypt",
-            "Encrypt or decrypt text or files and write the result to stdout or a file.");
+            "Encrypt or decrypt text or files and write the result to a file.");
         var encryptAlgorithmArgument = new Argument<string>("algorithm")
         {
             Description = "Encryption algorithm (e.g., AES-256-GCM)."
@@ -28,7 +28,7 @@ internal static class EncryptCommand
         };
         var encryptOutOption = new Option<FileInfo?>("--out", "-o")
         {
-            Description = "Write output to a file instead of stdout."
+            Description = "Write output to a file path (defaults to encrypt-output.txt or decrypt-output.txt in the project root)."
         };
         var encryptDecryptOption = new Option<bool>("--decrypt", "-d")
         {
@@ -180,19 +180,19 @@ internal static class EncryptCommand
             byte[]? aadBytes = string.IsNullOrWhiteSpace(aadText) ? null : Encoding.UTF8.GetBytes(aadText);
             var upperCaseHex = upper;
 
+            var resolvedOutFile = outFile ?? new FileInfo(Path.Combine(
+                Directory.GetCurrentDirectory(),
+                decrypt ? "decrypt-output.txt" : "encrypt-output.txt"));
+
             try
             {
-                string output = decrypt
-                    ? outFile is null
-                        ? encoder.DecryptToString(input, file, keyBytes, format, aadBytes)
-                        : encoder.DecryptToFile(input, file, outFile.FullName, keyBytes, format, aadBytes)
-                    : outFile is null
-                        ? encoder.EncryptToString(input, file, keyBytes, nonceBytes, format, upperCaseHex, aadBytes)
-                        : encoder.EncryptToFile(input, file, outFile.FullName, keyBytes, nonceBytes, format, upperCaseHex, aadBytes);
-
-                if (outFile is null)
+                if (decrypt)
                 {
-                    Console.WriteLine(output);
+                    encoder.DecryptToFile(input, file, resolvedOutFile.FullName, keyBytes, format, aadBytes);
+                }
+                else
+                {
+                    encoder.EncryptToFile(input, file, resolvedOutFile.FullName, keyBytes, nonceBytes, format, upperCaseHex, aadBytes);
                 }
             }
             catch (FormatException ex)

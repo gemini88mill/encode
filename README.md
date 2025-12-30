@@ -60,9 +60,10 @@ Supported algorithms: `AES-256-GCM` (common dash-less variants are also accepted
 
 Options:
 - `--file, -f` Treat the input as a file path and use the file contents.
-- `--out <path>, -o <path>` Write output to the given file instead of stdout.
+- `--out <path>, -o <path>` Write output to the given file (defaults to `encrypt-output.txt` or `decrypt-output.txt` in the project root).
 - `--decrypt, -d` Decrypt instead of encrypt.
-- `--key <value>, -k <value>` Encryption key bytes (required).
+- `--password <value>, -p <value>` Password to derive a key from (UTF-8 text).
+- `--key <value>, -k <value>` Encryption key bytes (required unless `--password` is provided).
 - `--key-format <base64|hex>` Key format (defaults to `base64`).
 - `--nonce <value>, -n <value>` Nonce/IV for AES-GCM (optional, uses `--key-format`).
 - `--aad <value>` Associated data (AAD) as UTF-8 text (optional).
@@ -97,7 +98,7 @@ dotnet run -- generateKey --format hex --upper
 ```
 
 ### Output to a file
-Use `--out` with hash, encode, or encrypt to write the result to disk instead of stdout.
+Use `--out` with hash or encode to write the result to disk instead of stdout. Encrypt writes to a file by default (project root) unless you provide `--out`.
 ```bash
 dotnet run -- hash SHA-256 "hello world" --out output.txt
 dotnet run -- encode base64 "hello world" --out output.txt
