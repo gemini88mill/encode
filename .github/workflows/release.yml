@@ -31,6 +31,9 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
+      - name: Run tests
+        run: dotnet test tests/Encode.Tests/Encode.Tests.csproj -c Release
+
       - name: Determine package version
         id: version
         env:
