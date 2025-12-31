@@ -9,7 +9,7 @@
     <PackAsTool>true</PackAsTool>
     <PackageId>encode-cli</PackageId>
     <ToolCommandName>enc</ToolCommandName>
-    <Version>0.0.1</Version>
+    <Version>1.0.0</Version>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Authors>Encode CLI</Authors>
     <Description>Command-line utility for hashing or encoding text and files.</Description>
