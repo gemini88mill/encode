@@ -4,10 +4,12 @@ namespace Encode;
 
 public sealed class Aes256GcmEncrypter : EncrypterBase
 {
-    private const int KeySize = 32;
+    public const int KeySize = 32;
 
     protected override int NonceSize => 12;
     protected override int TagSize => 16;
+    protected override string AlgorithmId => "A256GCM";
+    protected override int KeySizeBytes => KeySize;
 
     protected override EncryptionPayload Encrypt(
         byte[] plaintext,
@@ -46,11 +48,11 @@ public sealed class Aes256GcmEncrypter : EncrypterBase
         return plaintext;
     }
 
-    private static void ValidateKey(byte[] key)
+    private void ValidateKey(byte[] key)
     {
-        if (key.Length != KeySize)
+        if (key.Length != KeySizeBytes)
         {
-            throw new ArgumentException($"Key must be {KeySize} bytes for AES-256-GCM.", nameof(key));
+            throw new ArgumentException($"Key must be {KeySizeBytes} bytes for AES-256-GCM.", nameof(key));
         }
     }
 }
