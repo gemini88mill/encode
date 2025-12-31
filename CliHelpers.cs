@@ -1,6 +1,6 @@
 using System;
-using System.Security.Cryptography;
 using System.Text;
+using System.Security.Cryptography;
 
 namespace Encode;
 
@@ -30,9 +30,14 @@ internal static class CliHelpers
         }
     }
 
-    public static byte[] DeriveKeyFromPassword(string password)
+    public static byte[] DeriveKeyFromPassword(string password, byte[] salt, int iterations, int keyLength)
     {
-        var passwordBytes = Encoding.UTF8.GetBytes(password);
-        return SHA256.HashData(passwordBytes);
+        using var pbkdf2 = new Rfc2898DeriveBytes(
+            password,
+            salt,
+            iterations,
+            HashAlgorithmName.SHA256);
+
+        return pbkdf2.GetBytes(keyLength);
     }
 }

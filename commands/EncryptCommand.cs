@@ -154,28 +154,8 @@ internal static class EncryptCommand
                 return 2;
             }
 
-            byte[] keyBytes;
-            if (hasPassword)
-            {
-                keyBytes = CliHelpers.DeriveKeyFromPassword(passwordText!);
-            }
-            else if (!CliHelpers.TryParseBytes(keyText!, keyFormat, out keyBytes))
-            {
-                Console.Error.WriteLine($"Invalid key for {keyFormat.ToString().ToLowerInvariant()} format.");
-                return 2;
-            }
-
-            byte[]? nonceBytes = null;
-            if (!string.IsNullOrWhiteSpace(nonceText))
-            {
-                if (!CliHelpers.TryParseBytes(nonceText, keyFormat, out var parsedNonce))
-                {
-                    Console.Error.WriteLine($"Invalid nonce for {keyFormat.ToString().ToLowerInvariant()} format.");
-                    return 2;
-                }
-
-                nonceBytes = parsedNonce;
-            }
+            const int defaultIterations = 310_000;
+            const int defaultSaltSize = 16;
 
             byte[]? aadBytes = string.IsNullOrWhiteSpace(aadText) ? null : Encoding.UTF8.GetBytes(aadText);
             var upperCaseHex = upper;
@@ -188,11 +168,104 @@ internal static class EncryptCommand
             {
                 if (decrypt)
                 {
-                    encoder.DecryptToFile(input, file, resolvedOutFile.FullName, keyBytes, format, aadBytes);
+                    var envelope = encoder.ReadEnvelope(input, file, format);
+                    var kdf = envelope.Metadata.Kdf ?? "none";
+                    byte[] keyBytes;
+
+                    if (string.Equals(kdf, "PBKDF2-SHA256", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (envelope.Metadata.Iterations <= 0 || envelope.Metadata.Salt.Length == 0)
+                        {
+                            Console.Error.WriteLine("Envelope is missing PBKDF2 iteration count or salt.");
+                            return 2;
+                        }
+
+                        if (hasPassword)
+                        {
+                            keyBytes = CliHelpers.DeriveKeyFromPassword(
+                                passwordText!,
+                                envelope.Metadata.Salt,
+                                envelope.Metadata.Iterations,
+                                encoder.RequiredKeySize);
+                        }
+                        else if (hasKey && CliHelpers.TryParseBytes(keyText!, keyFormat, out var parsedKey))
+                        {
+                            keyBytes = parsedKey;
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine("Password is required for PBKDF2-derived keys when a raw key is not supplied.");
+                            return 2;
+                        }
+                    }
+                    else
+                    {
+                        if (!hasKey)
+                        {
+                            Console.Error.WriteLine("Provide --key when the envelope does not specify a key derivation function.");
+                            return 2;
+                        }
+
+                        if (!CliHelpers.TryParseBytes(keyText!, keyFormat, out var parsedKey))
+                        {
+                            Console.Error.WriteLine($"Invalid key for {keyFormat.ToString().ToLowerInvariant()} format.");
+                            return 2;
+                        }
+
+                        keyBytes = parsedKey;
+                    }
+
+                    encoder.DecryptParsedEnvelopeToFile(envelope, resolvedOutFile.FullName, keyBytes, aadBytes);
                 }
                 else
                 {
-                    encoder.EncryptToFile(input, file, resolvedOutFile.FullName, keyBytes, nonceBytes, format, upperCaseHex, aadBytes);
+                    byte[] keyBytes;
+                    byte[] saltBytes = Array.Empty<byte>();
+                    string kdfName = "none";
+                    int iterations = 0;
+
+                    if (hasPassword)
+                    {
+                        saltBytes = RandomNumberGenerator.GetBytes(defaultSaltSize);
+                        iterations = defaultIterations;
+                        kdfName = "PBKDF2-SHA256";
+                        keyBytes = CliHelpers.DeriveKeyFromPassword(passwordText!, saltBytes, iterations, encoder.RequiredKeySize);
+                    }
+                    else if (!CliHelpers.TryParseBytes(keyText!, keyFormat, out keyBytes))
+                    {
+                        Console.Error.WriteLine($"Invalid key for {keyFormat.ToString().ToLowerInvariant()} format.");
+                        return 2;
+                    }
+
+                    byte[]? nonceBytes = null;
+                    if (!string.IsNullOrWhiteSpace(nonceText))
+                    {
+                        if (!CliHelpers.TryParseBytes(nonceText, keyFormat, out var parsedNonce))
+                        {
+                            Console.Error.WriteLine($"Invalid nonce for {keyFormat.ToString().ToLowerInvariant()} format.");
+                            return 2;
+                        }
+
+                        nonceBytes = parsedNonce;
+                    }
+
+                    var envelopeMetadata = new EncryptionEnvelopeMetadata(
+                        encoder.Algorithm,
+                        kdfName,
+                        iterations,
+                        saltBytes,
+                        format);
+
+                    encoder.EncryptToFile(
+                        input,
+                        file,
+                        resolvedOutFile.FullName,
+                        keyBytes,
+                        nonceBytes,
+                        format,
+                        upperCaseHex,
+                        envelopeMetadata,
+                        aadBytes);
                 }
             }
             catch (FormatException ex)
