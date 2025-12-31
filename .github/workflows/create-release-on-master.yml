@@ -37,8 +37,7 @@ jobs:
           )
 
           IFS='.' read -r MAJOR MINOR PATCH <<<"$BASE_VERSION"
-          PATCH=${PATCH:-0}
-          RELEASE_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))"
+          RELEASE_VERSION="${MAJOR}.${MINOR}.${RUN_NUMBER}"
 
           echo "version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=v$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
