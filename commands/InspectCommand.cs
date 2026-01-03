@@ -40,13 +40,13 @@ internal static class InspectCommand
     {
         if (file is null)
         {
-            Console.Error.WriteLine("File path is required.");
+            Logger.Error("File path is required.");
             return 2;
         }
 
         if (!file.Exists)
         {
-            Console.Error.WriteLine($"File not found: {file.FullName}");
+            Logger.Error($"File not found: {file.FullName}");
             return 2;
         }
 
@@ -57,20 +57,22 @@ internal static class InspectCommand
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine(ex.Message);
+            Logger.Exception(ex);
             return 2;
         }
 
         if (!InspectorHelpers.TryReadEnvelopeMetadata(payloadText, file, out var inspection, out var errorMessage))
         {
-            Console.Error.WriteLine(errorMessage);
+            Logger.Error(errorMessage);
             return 2;
         }
 
         var json = JsonSerializer.Serialize(inspection, OutputOptions);
-        Console.WriteLine(json);
+        Logger.WriteLine(json);
         return 0;
     }
 
 
 }
+
+
