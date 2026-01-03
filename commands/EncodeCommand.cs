@@ -50,13 +50,13 @@ internal static class EncodeCommand
 
             if (string.IsNullOrWhiteSpace(algorithm) || string.IsNullOrWhiteSpace(input))
             {
-                Console.Error.WriteLine("Algorithm and input are required.");
+                Logger.Error("Algorithm and input are required.");
                 return 2;
             }
 
             if (file && !File.Exists(input))
             {
-                Console.Error.WriteLine($"Input file not found: {input}");
+                Logger.Error($"Input file not found: {input}");
                 return 2;
             }
 
@@ -70,7 +70,7 @@ internal static class EncodeCommand
 
             if (encoder is null)
             {
-                Console.Error.WriteLine($"Unsupported encoding algorithm: {algorithm}");
+                Logger.Error($"Unsupported encoding algorithm: {algorithm}");
                 return 2;
             }
 
@@ -83,13 +83,13 @@ internal static class EncodeCommand
             }
             catch (FormatException ex)
             {
-                Console.Error.WriteLine(ex.Message);
+                Logger.Exception(ex);
                 return 2;
             }
 
             if (outFile is null)
             {
-                Console.WriteLine(output);
+                Logger.WriteLine(output);
             }
 
             return 0;
@@ -98,3 +98,4 @@ internal static class EncodeCommand
         return encodeCommand;
     }
 }
+

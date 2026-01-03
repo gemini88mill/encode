@@ -45,19 +45,19 @@ internal static class GenerateKeyCommand
 
             if (length <= 0)
             {
-                Console.Error.WriteLine("Byte length must be greater than zero.");
+                Logger.Error("Byte length must be greater than zero.");
                 return 2;
             }
 
             if (lower && upper)
             {
-                Console.Error.WriteLine("Choose only one of --lower or --upper.");
+                Logger.Error("Choose only one of --lower or --upper.");
                 return 2;
             }
 
             if ((lower || upper) && format != OutputFormat.Hex)
             {
-                Console.Error.WriteLine("--lower/--upper only apply to hex output.");
+                Logger.Error("--lower/--upper only apply to hex output.");
                 return 2;
             }
 
@@ -71,10 +71,11 @@ internal static class GenerateKeyCommand
                 _ => throw new ArgumentOutOfRangeException(nameof(format), format, "Unsupported output format.")
             };
 
-            Console.WriteLine(output);
+            Logger.WriteLine(output);
             return 0;
         });
 
         return generateKeyCommand;
     }
 }
+

@@ -62,25 +62,25 @@ internal static class HashCommand
 
             if (lower && upper)
             {
-                Console.Error.WriteLine("Choose only one of --lower or --upper.");
+                Logger.Error("Choose only one of --lower or --upper.");
                 return 2;
             }
 
             if ((lower || upper) && format != OutputFormat.Hex)
             {
-                Console.Error.WriteLine("--lower/--upper only apply to hex output.");
+                Logger.Error("--lower/--upper only apply to hex output.");
                 return 2;
             }
 
             if (string.IsNullOrWhiteSpace(algorithm) || string.IsNullOrWhiteSpace(input))
             {
-                Console.Error.WriteLine("Algorithm and input are required.");
+                Logger.Error("Algorithm and input are required.");
                 return 2;
             }
 
             if (file && !File.Exists(input))
             {
-                Console.Error.WriteLine($"Input file not found: {input}");
+                Logger.Error($"Input file not found: {input}");
                 return 2;
             }
 
@@ -100,7 +100,7 @@ internal static class HashCommand
 
             if (encoder is null)
             {
-                Console.Error.WriteLine($"Unsupported hash algorithm: {algorithm}");
+                Logger.Error($"Unsupported hash algorithm: {algorithm}");
                 return 2;
             }
 
@@ -112,7 +112,7 @@ internal static class HashCommand
 
             if (outFile is null)
             {
-                Console.WriteLine(output);
+                Logger.WriteLine(output);
             }
 
             return 0;
@@ -121,3 +121,4 @@ internal static class HashCommand
         return hashCommand;
     }
 }
+

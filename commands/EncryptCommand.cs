@@ -103,19 +103,19 @@ internal static class EncryptCommand
 
             if (lower && upper)
             {
-                Console.Error.WriteLine("Choose only one of --lower or --upper.");
+                Logger.Error("Choose only one of --lower or --upper.");
                 return 2;
             }
 
             if ((lower || upper) && format != OutputFormat.Hex)
             {
-                Console.Error.WriteLine("--lower/--upper only apply to hex output.");
+                Logger.Error("--lower/--upper only apply to hex output.");
                 return 2;
             }
 
             if (string.IsNullOrWhiteSpace(algorithm) || string.IsNullOrWhiteSpace(input))
             {
-                Console.Error.WriteLine("Algorithm and input are required.");
+                Logger.Error("Algorithm and input are required.");
                 return 2;
             }
 
@@ -124,19 +124,19 @@ internal static class EncryptCommand
 
             if (hasPassword && hasKey)
             {
-                Console.Error.WriteLine("Provide either --password or --key, not both.");
+                Logger.Error("Provide either --password or --key, not both.");
                 return 2;
             }
 
             if (!hasPassword && !hasKey)
             {
-                Console.Error.WriteLine("Key is required when --password is not provided.");
+                Logger.Error("Key is required when --password is not provided.");
                 return 2;
             }
 
             if (file && !File.Exists(input))
             {
-                Console.Error.WriteLine($"Input file not found: {input}");
+                Logger.Error($"Input file not found: {input}");
                 return 2;
             }
 
@@ -151,7 +151,7 @@ internal static class EncryptCommand
 
             if (encoder is null)
             {
-                Console.Error.WriteLine($"Unsupported encryption algorithm: {algorithm}");
+                Logger.Error($"Unsupported encryption algorithm: {algorithm}");
                 return 2;
             }
 
@@ -177,7 +177,7 @@ internal static class EncryptCommand
                     {
                         if (envelope.Metadata.Iterations <= 0 || envelope.Metadata.Salt.Length == 0)
                         {
-                            Console.Error.WriteLine("Envelope is missing PBKDF2 iteration count or salt.");
+                            Logger.Error("Envelope is missing PBKDF2 iteration count or salt.");
                             return 2;
                         }
 
@@ -195,7 +195,7 @@ internal static class EncryptCommand
                         }
                         else
                         {
-                            Console.Error.WriteLine("Password is required for PBKDF2-derived keys when a raw key is not supplied.");
+                            Logger.Error("Password is required for PBKDF2-derived keys when a raw key is not supplied.");
                             return 2;
                         }
                     }
@@ -203,13 +203,13 @@ internal static class EncryptCommand
                     {
                         if (!hasKey)
                         {
-                            Console.Error.WriteLine("Provide --key when the envelope does not specify a key derivation function.");
+                            Logger.Error("Provide --key when the envelope does not specify a key derivation function.");
                             return 2;
                         }
 
                         if (!CliHelpers.TryParseBytes(keyText!, keyFormat, out var parsedKey))
                         {
-                            Console.Error.WriteLine($"Invalid key for {keyFormat.ToString().ToLowerInvariant()} format.");
+                            Logger.Error($"Invalid key for {keyFormat.ToString().ToLowerInvariant()} format.");
                             return 2;
                         }
 
@@ -234,7 +234,7 @@ internal static class EncryptCommand
                     }
                     else if (!CliHelpers.TryParseBytes(keyText!, keyFormat, out keyBytes))
                     {
-                        Console.Error.WriteLine($"Invalid key for {keyFormat.ToString().ToLowerInvariant()} format.");
+                        Logger.Error($"Invalid key for {keyFormat.ToString().ToLowerInvariant()} format.");
                         return 2;
                     }
 
@@ -243,7 +243,7 @@ internal static class EncryptCommand
                     {
                         if (!CliHelpers.TryParseBytes(nonceText, keyFormat, out var parsedNonce))
                         {
-                            Console.Error.WriteLine($"Invalid nonce for {keyFormat.ToString().ToLowerInvariant()} format.");
+                            Logger.Error($"Invalid nonce for {keyFormat.ToString().ToLowerInvariant()} format.");
                             return 2;
                         }
 
@@ -272,17 +272,17 @@ internal static class EncryptCommand
             }
             catch (FormatException ex)
             {
-                Console.Error.WriteLine(ex.Message);
+                Logger.Exception(ex);
                 return 2;
             }
             catch (CryptographicException ex)
             {
-                Console.Error.WriteLine(ex.Message);
+                Logger.Exception(ex);
                 return 2;
             }
             catch (ArgumentException ex)
             {
-                Console.Error.WriteLine(ex.Message);
+                Logger.Exception(ex);
                 return 2;
             }
 
@@ -292,3 +292,5 @@ internal static class EncryptCommand
         return encryptCommand;
     }
 }
+
+

@@ -16,12 +16,12 @@ internal sealed class CustomHelpAction : SynchronousCommandLineAction
         var title = parseResult.RootCommandResult.Command.Description;
         if (!string.IsNullOrWhiteSpace(title))
         {
-            Console.WriteLine(title);
-            Console.WriteLine();
+            Logger.WriteLine(title);
+            Logger.WriteLine(string.Empty);
         }
 
         var result = defaultHelp.Invoke(parseResult);
-        Console.WriteLine("Sample usage: --file input.txt");
+        Logger.WriteLine("Sample usage: --file input.txt");
         return result;
     }
 }
