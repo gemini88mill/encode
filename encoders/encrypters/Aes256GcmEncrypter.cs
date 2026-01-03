@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using Encode.Models;
 
 namespace Encode;
 
