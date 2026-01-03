@@ -250,6 +250,7 @@ internal static class EncryptCommand
                     }
 
                     var envelopeMetadata = new EncryptionEnvelopeMetadata(
+                        EnvelopeVersion.Current,
                         encoder.Algorithm,
                         kdfName,
                         iterations,

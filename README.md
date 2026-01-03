@@ -8,6 +8,7 @@ Command-line utility for hashing, encoding, and encrypting text and files. The t
 dotnet run -- hash <algorithm> <input> [options]
 dotnet run -- encode <algorithm> <input> [options]
 dotnet run -- encrypt <algorithm> <input> [options]
+dotnet run -- inspect <file>
 dotnet run -- generateKey [options]
 ```
 
@@ -78,6 +79,48 @@ dotnet run -- encrypt AES-256-GCM "hello world" --key <base64-key>
 
 # Decrypt a hex payload
 dotnet run -- encrypt AES-256-GCM "<payload>" --decrypt --key <hex-key> --key-format hex --format hex
+```
+
+### Inspect command
+
+Use `inspect` to view non-secret envelope metadata for an encrypted file.
+
+Examples:
+```bash
+dotnet run -- inspect "C:\path\to\encrypt-output.txt"
+```
+
+### Envelope output
+
+Encrypted files are stored as JSON envelopes with a version field:
+- `version` `1` is the current envelope format.
+- Envelopes without a version are treated as legacy `0` for inspection.
+
+Example inspect output:
+```json
+{
+  "version": {
+    "value": "1",
+    "legacy": false
+  },
+  "algorithm": {
+    "id": "A256GCM",
+    "name": "AES-256-GCM",
+    "keySizeBytes": 32
+  },
+  "file": {
+    "path": "C:\\path\\to\\encrypt-output.txt",
+    "name": "encrypt-output.txt",
+    "sizeBytes": 1234,
+    "lastModifiedUtc": "2025-12-31T22:15:30.1234567Z"
+  },
+  "envelope": {
+    "kdf": "PBKDF2-SHA256",
+    "iterations": 310000,
+    "salt": "base64-or-hex-salt",
+    "format": "base64"
+  }
+}
 ```
 
 ### Generate key command

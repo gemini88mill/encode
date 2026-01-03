@@ -7,6 +7,7 @@ namespace Encode;
 public sealed record EncryptionPayload(byte[] Nonce, byte[] Tag, byte[] Ciphertext);
 
 public sealed record EncryptionEnvelopeMetadata(
+    string Version,
     string Algorithm,
     string Kdf,
     int Iterations,
@@ -17,6 +18,9 @@ public sealed record ParsedEncryptionEnvelope(EncryptionEnvelopeMetadata Metadat
 
 internal sealed class EncryptionEnvelopeData
 {
+    [JsonPropertyName("version")]
+    public string Version { get; set; } = string.Empty;
+
     [JsonPropertyName("alg")]
     public string Algorithm { get; set; } = string.Empty;
 
@@ -187,6 +191,7 @@ public abstract class EncrypterBase
 
         var envelope = new EncryptionEnvelopeData
         {
+            Version = envelopeMetadata.Version,
             Algorithm = envelopeMetadata.Algorithm,
             Kdf = envelopeMetadata.Kdf,
             Iterations = envelopeMetadata.Iterations,
@@ -224,6 +229,7 @@ public abstract class EncrypterBase
 
         var legacyPayload = ParseLegacyPayload(trimmed, formatHint);
         var legacyMetadata = new EncryptionEnvelopeMetadata(
+            EnvelopeVersion.Legacy,
             AlgorithmId,
             "none",
             0,
@@ -244,6 +250,7 @@ public abstract class EncrypterBase
             : ParseBytes(envelope.Salt, resolvedFormat);
 
         var metadata = new EncryptionEnvelopeMetadata(
+            EnvelopeVersion.Normalize(envelope.Version),
             envelope.Algorithm,
             envelope.Kdf,
             envelope.Iterations,

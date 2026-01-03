@@ -8,6 +8,7 @@ rootCommand.Subcommands.Add(HashCommand.Create());
 rootCommand.Subcommands.Add(EncodeCommand.Create());
 rootCommand.Subcommands.Add(GenerateKeyCommand.Create());
 rootCommand.Subcommands.Add(EncryptCommand.Create());
+rootCommand.Subcommands.Add(InspectCommand.Create());
 
 for (var i = 0; i < rootCommand.Options.Count; i++)
 {
