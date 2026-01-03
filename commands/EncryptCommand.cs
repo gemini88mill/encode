@@ -40,10 +40,6 @@ internal static class EncryptCommand
             Description = "Encryption key bytes (format determined by --key-format).",
             Required = false
         };
-        var encryptPasswordOption = new Option<string?>("--password", "-p")
-        {
-            Description = "Password to derive a key from (UTF-8 text)."
-        };
         var encryptKeyFormatOption = new Option<OutputFormat>("--key-format")
         {
             Description = "Key format: base64 or hex.",
@@ -77,7 +73,6 @@ internal static class EncryptCommand
         encryptCommand.Options.Add(encryptOutOption);
         encryptCommand.Options.Add(encryptDecryptOption);
         encryptCommand.Options.Add(encryptKeyOption);
-        encryptCommand.Options.Add(encryptPasswordOption);
         encryptCommand.Options.Add(encryptKeyFormatOption);
         encryptCommand.Options.Add(encryptNonceOption);
         encryptCommand.Options.Add(encryptAadOption);
@@ -93,7 +88,6 @@ internal static class EncryptCommand
             var outFile = parseResult.GetValue(encryptOutOption);
             var decrypt = parseResult.GetValue(encryptDecryptOption);
             var keyText = parseResult.GetValue(encryptKeyOption);
-            var passwordText = parseResult.GetValue(encryptPasswordOption);
             var keyFormat = parseResult.GetValue(encryptKeyFormatOption);
             var nonceText = parseResult.GetValue(encryptNonceOption);
             var aadText = parseResult.GetValue(encryptAadOption);
@@ -119,20 +113,7 @@ internal static class EncryptCommand
                 return 2;
             }
 
-            var hasPassword = !string.IsNullOrWhiteSpace(passwordText);
             var hasKey = !string.IsNullOrWhiteSpace(keyText);
-
-            if (hasPassword && hasKey)
-            {
-                Logger.Error("Provide either --password or --key, not both.");
-                return 2;
-            }
-
-            if (!hasPassword && !hasKey)
-            {
-                Logger.Error("Key is required when --password is not provided.");
-                return 2;
-            }
 
             if (file && !File.Exists(input))
             {
@@ -181,22 +162,18 @@ internal static class EncryptCommand
                             return 2;
                         }
 
-                        if (hasPassword)
-                        {
-                            keyBytes = CliHelpers.DeriveKeyFromPassword(
-                                passwordText!,
-                                envelope.Metadata.Salt,
-                                envelope.Metadata.Iterations,
-                                encoder.RequiredKeySize);
-                        }
-                        else if (hasKey && CliHelpers.TryParseBytes(keyText!, keyFormat, out var parsedKey))
+                        if (hasKey && CliHelpers.TryParseBytes(keyText!, keyFormat, out var parsedKey))
                         {
                             keyBytes = parsedKey;
                         }
                         else
                         {
-                            Logger.Error("Password is required for PBKDF2-derived keys when a raw key is not supplied.");
-                            return 2;
+                            var password = Logger.PromptPassword("Password:");
+                            keyBytes = CliHelpers.DeriveKeyFromPassword(
+                                password,
+                                envelope.Metadata.Salt,
+                                envelope.Metadata.Iterations,
+                                encoder.RequiredKeySize);
                         }
                     }
                     else
@@ -225,17 +202,21 @@ internal static class EncryptCommand
                     string kdfName = "none";
                     int iterations = 0;
 
-                    if (hasPassword)
+                    if (hasKey)
                     {
+                        if (!CliHelpers.TryParseBytes(keyText!, keyFormat, out keyBytes))
+                        {
+                            Logger.Error($"Invalid key for {keyFormat.ToString().ToLowerInvariant()} format.");
+                            return 2;
+                        }
+                    }
+                    else
+                    {
+                        var password = Logger.PromptPassword("Password:");
                         saltBytes = RandomNumberGenerator.GetBytes(defaultSaltSize);
                         iterations = defaultIterations;
                         kdfName = "PBKDF2-SHA256";
-                        keyBytes = CliHelpers.DeriveKeyFromPassword(passwordText!, saltBytes, iterations, encoder.RequiredKeySize);
-                    }
-                    else if (!CliHelpers.TryParseBytes(keyText!, keyFormat, out keyBytes))
-                    {
-                        Logger.Error($"Invalid key for {keyFormat.ToString().ToLowerInvariant()} format.");
-                        return 2;
+                        keyBytes = CliHelpers.DeriveKeyFromPassword(password, saltBytes, iterations, encoder.RequiredKeySize);
                     }
 
                     byte[]? nonceBytes = null;
